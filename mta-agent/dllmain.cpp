@@ -48,6 +48,27 @@ __declspec(naked) NTSTATUS NTAPI NtCreateThreadEx2(
 	}
 }
 
+__declspec(naked) NTSTATUS NTAPI NtCreateThreadEx3(
+	OUT PHANDLE hThread,
+	IN ACCESS_MASK DesiredAccess,
+	IN PVOID ObjectAttributes,
+	IN HANDLE ProcessHandle,
+	IN PVOID lpStartAddress,
+	IN PVOID lpParameter,
+	IN ULONG Flags,
+	IN SIZE_T StackZeroBits,
+	IN SIZE_T SizeOfStackCommit,
+	IN SIZE_T SizeOfStackReserve,
+	OUT PVOID lpBytesBuffer
+)
+{
+	__asm {
+		mov     eax, 0C9h
+		call    dword ptr fs : [0xC0]
+		retn    2Ch
+	}
+}
+
 __declspec(naked) NTSTATUS NTAPI NtAllocateVirtualMemory(
 	IN HANDLE               ProcessHandle,
 	IN OUT PVOID* BaseAddress,
@@ -152,6 +173,9 @@ bool InjectDLL(HANDLE hProc, const std::string& DLL_Path)
 	}
 	else if (IsWindowsVersion(10, 0, 22631)) {
 		NtCreateThreadEx2(&ThreadHandle, 0x1FFFFF, NULL, hProc, addrLoadLibrary, MyAlloc, FALSE, NULL, NULL, NULL, NULL);
+	}
+	else if (IsWindowsVersion(10, 0, 26100)) {
+		NtCreateThreadEx3(&ThreadHandle, 0x1FFFFF, NULL, hProc, addrLoadLibrary, MyAlloc, FALSE, NULL, NULL, NULL, NULL);
 	}
 	if (ThreadHandle == NULL) return false;
 	WaitForSingleObject(ThreadHandle, INFINITE);
